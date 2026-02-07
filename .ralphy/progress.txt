@@ -333,3 +333,72 @@
 - All 274 tests passing (48 agent + 12 CLI + 39 cosmology + 24 plotter + 47 Hohmann + 74 Kepler + 30 session memory)
 - Linting passes with ruff
 
+## 2026-02-07: Error Handling and Graceful Degradation
+
+### Completed Tasks
+- Created `src/kosmo/errors.py` - Comprehensive error handling module
+  - Added `ErrorSeverity` enum with WARNING, RECOVERABLE, CRITICAL levels
+  - Added `ErrorCategory` enum with 9 categories (API_ERROR, NETWORK_ERROR, RATE_LIMIT, TIMEOUT, AUTHENTICATION, VALIDATION, EXECUTION, NOT_FOUND, UNKNOWN)
+  - Created `KosmoError` base exception class with:
+    - Message, category, severity, original_error, tool_name, suggestion fields
+    - `to_user_message()` method for user-friendly error display
+  - Created specialized exception classes:
+    - `APIError` - External API failures
+    - `NetworkError` - Connection issues
+    - `RateLimitError` - Rate limiting with optional retry_after
+    - `AuthenticationError` - API key issues (CRITICAL severity)
+    - `ExecutionError` - Code execution errors
+    - `TimeoutError` - Request timeouts
+  - Added `classify_error()` function for automatic error categorization based on message patterns
+  - Added `is_transient_error()` function to identify retry-worthy errors
+  - Added `get_fallback_suggestion()` function for tool-specific fallback recommendations
+  - Created `ErrorHandler` class for centralized error management:
+    - Error logging with category tracking
+    - `should_retry()` method for retry decisions
+    - `get_degradation_message()` for user notifications about failed tools
+    - `get_error_summary()` for error statistics
+- Updated `src/kosmo/__init__.py` - Exported error handling classes
+- Updated `src/kosmo/agent.py` - Integrated error handling and graceful degradation
+  - Added `graceful_degradation` parameter to `KosmoAgent.__init__()` (default: True)
+  - Added `_error_handler` (ErrorHandler instance) for centralized error management
+  - Added `_failed_tools` set to track tools that have failed
+  - Added `_is_tool_error()` method to detect tool errors
+  - Added `_handle_tool_failure()` method to log and track failed tools
+  - Added `get_failed_tools()` method to retrieve failed tools set (returns copy)
+  - Added `reset_failed_tools()` method to clear failed tools and error log
+  - Added `get_degradation_status()` method for degradation messages
+  - Added `get_error_summary()` method to get error statistics
+  - Updated `_print_steps()` to detect and track tool failures
+  - Added `_build_retry_message()` for context-aware retry prompts
+  - Added `_format_degraded_response()` to append degradation notices
+  - Added `_format_error_response()` for user-friendly error responses
+  - Updated `query()` method:
+    - Adds degradation context to system prompt when tools have failed
+    - Uses error classification for smarter retry decisions
+    - Appends degradation notices to responses when applicable
+    - Provides specific error messages based on error category
+- Created `tests/test_errors.py` - 88 comprehensive tests
+  - Tests for ErrorSeverity enum (3 tests)
+  - Tests for ErrorCategory enum (9 tests)
+  - Tests for KosmoError base class (8 tests)
+  - Tests for specialized error classes:
+    - APIError (3 tests)
+    - NetworkError (2 tests)
+    - RateLimitError (2 tests)
+    - AuthenticationError (2 tests)
+    - ExecutionError (2 tests)
+    - TimeoutError (2 tests)
+  - Tests for classify_error function (8 tests)
+  - Tests for is_transient_error function (6 tests)
+  - Tests for get_fallback_suggestion function (6 tests)
+  - Tests for ErrorHandler class (15 tests)
+  - Tests for agent error integration (20 tests)
+- Updated `tests/test_agent.py` - Fixed test for new transient error handling
+
+### PRD Tasks Marked Complete
+- Implement error handling and graceful degradation
+
+### Test Results
+- All 362 tests passing (48 agent + 12 CLI + 39 cosmology + 24 plotter + 47 Hohmann + 74 Kepler + 30 session memory + 88 error handling)
+- Linting passes with ruff
+

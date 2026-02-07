@@ -4,7 +4,7 @@ import copy
 import os
 import time
 import uuid
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 from dotenv import load_dotenv
 from langchain_core.tools import Tool
@@ -12,6 +12,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.prebuilt import create_react_agent
 
+from .errors import ErrorHandler, classify_error, is_transient_error
 from .prompts import REACT_SYSTEM_PROMPT, enhance_prompt_for_topic
 from .tools import create_plot, execute_code, search_wikipedia, web_search
 
@@ -139,7 +140,8 @@ class KosmoAgent:
         max_retries: int = MAX_RETRIES,
         with_tool_retry: bool = True,
         use_topic_prompts: bool = True,
-        enable_memory: bool = True
+        enable_memory: bool = True,
+        graceful_degradation: bool = True
     ):
         """Initialize the agent.
 
@@ -149,12 +151,14 @@ class KosmoAgent:
             with_tool_retry: Whether to enable retry logic for tool calls (default: True)
             use_topic_prompts: Whether to use topic-specific prompt templates (default: True)
             enable_memory: Whether to enable session memory for multi-turn conversations (default: True)
+            graceful_degradation: Whether to enable graceful degradation on tool failures (default: True)
         """
         self.verbose = verbose
         self.max_retries = max_retries
         self.with_tool_retry = with_tool_retry
         self.use_topic_prompts = use_topic_prompts
         self.enable_memory = enable_memory
+        self.graceful_degradation = graceful_degradation
         self.messages: List = []
         # Cache agents by prompt to avoid recreating for same topic
         self._agents: dict = {}
@@ -165,6 +169,9 @@ class KosmoAgent:
         self._current_thread_id: str = str(uuid.uuid4())
         # Store session metadata (thread_id -> session info)
         self._sessions: Dict[str, dict] = {}
+        # Error handling
+        self._error_handler = ErrorHandler(verbose=verbose)
+        self._failed_tools: Set[str] = set()
 
     def _get_llm(self):
         """Get or create the LLM instance."""
@@ -268,6 +275,12 @@ class KosmoAgent:
         else:
             system_prompt = REACT_SYSTEM_PROMPT
 
+        # Add degradation context if tools have failed
+        if self.graceful_degradation and self._failed_tools:
+            degradation_msg = self.get_degradation_status()
+            if degradation_msg:
+                system_prompt += f"\n\nNote: {degradation_msg}"
+
         agent = self._get_agent(system_prompt)
 
         # Use provided thread_id or current thread
@@ -314,6 +327,11 @@ class KosmoAgent:
                     is_complete, retry_reason = self._check_response_complete(response)
 
                     if is_complete:
+                        # Add degradation notice if needed
+                        if self.graceful_degradation and self._failed_tools:
+                            degradation_notice = self.get_degradation_status()
+                            if degradation_notice and degradation_notice not in response:
+                                response = f"{response}\n\n---\n{degradation_notice}"
                         return response
 
                     # Response incomplete - decide whether to retry
@@ -323,29 +341,96 @@ class KosmoAgent:
                             print(f"\n⚠️  Response incomplete ({retry_reason}), retrying... "
                                   f"(attempt {attempt + 2}/{self.max_retries})")
 
-                        # Set the next message to be a retry prompt
-                        retry_message = (
-                            "Please try again to complete the previous request. "
-                            "If a tool failed, try an alternative approach."
-                        )
+                        # Set the next message to be a retry prompt with fallback suggestions
+                        retry_message = self._build_retry_message(retry_reason)
                         current_message = retry_message
                         self.messages.append({"role": "user", "content": retry_message})
                         time.sleep(RETRY_DELAY)
                         continue
 
-                    # Max retries reached, return best response
-                    return last_response
+                    # Max retries reached, return best response with degradation notice
+                    return self._format_degraded_response(last_response)
 
             except Exception as e:
-                if attempt < self.max_retries - 1:
+                error_str = str(e)
+                category = classify_error(error_str)
+                should_retry = is_transient_error(category) and attempt < self.max_retries - 1
+
+                if should_retry:
                     if self.verbose:
-                        print(f"\n⚠️  Error: {e}, retrying... "
+                        print(f"\n⚠️  Error ({category.value}): {e}, retrying... "
                               f"(attempt {attempt + 2}/{self.max_retries})")
                     time.sleep(RETRY_DELAY * (attempt + 1))
                     continue
-                return f"Error after {self.max_retries} attempts: {str(e)}"
 
-        return last_response
+                # Non-recoverable error
+                return self._format_error_response(error_str)
+
+        return self._format_degraded_response(last_response)
+
+    def _build_retry_message(self, retry_reason: Optional[str]) -> str:
+        """Build a retry message based on the failure reason.
+
+        Args:
+            retry_reason: The reason for retrying
+
+        Returns:
+            A message prompting the agent to retry
+        """
+        base_msg = "Please try again to complete the previous request."
+
+        if retry_reason == "tool_failure":
+            if self._failed_tools:
+                failed_list = ", ".join(self._failed_tools)
+                return (
+                    f"{base_msg} The following tools have failed: {failed_list}. "
+                    "Please try an alternative approach using different tools or "
+                    "provide the best answer you can with available information."
+                )
+            return f"{base_msg} If a tool failed, try an alternative approach."
+
+        if retry_reason == "empty_response":
+            return f"{base_msg} Please provide a complete answer."
+
+        return f"{base_msg} Try an alternative approach if needed."
+
+    def _format_degraded_response(self, response: str) -> str:
+        """Format a response with degradation notices.
+
+        Args:
+            response: The agent response
+
+        Returns:
+            Response with degradation notices if applicable
+        """
+        if self.graceful_degradation and self._failed_tools:
+            degradation_notice = self.get_degradation_status()
+            if degradation_notice and degradation_notice not in response:
+                return f"{response}\n\n---\n{degradation_notice}"
+        return response
+
+    def _format_error_response(self, error: str) -> str:
+        """Format an error response with helpful information.
+
+        Args:
+            error: The error string
+
+        Returns:
+            User-friendly error response
+        """
+        category = classify_error(error)
+        msg = f"I encountered an error while processing your request: {error}\n"
+
+        if category.value == "authentication":
+            msg += "\nPlease check that your API keys are correctly configured in the .env file."
+        elif category.value == "network_error":
+            msg += "\nPlease check your internet connection and try again."
+        elif category.value == "rate_limit":
+            msg += "\nThe service is rate-limited. Please wait a moment and try again."
+        else:
+            msg += "\nPlease try rephrasing your question or try again later."
+
+        return msg
 
     def _extract_response(self, messages: List) -> Optional[str]:
         """Extract the final AI response from message list.
@@ -371,17 +456,76 @@ class KosmoAgent:
 
     def _print_steps(self, messages: List):
         """Print intermediate reasoning steps if verbose."""
+        current_tool_name = None
         for msg in messages:
             if hasattr(msg, 'type'):
                 if msg.type == 'ai' and hasattr(msg, 'tool_calls') and msg.tool_calls:
                     for tool_call in msg.tool_calls:
-                        print(f"\n🔧 Tool: {tool_call.get('name', 'unknown')}")
+                        current_tool_name = tool_call.get('name', 'unknown')
+                        print(f"\n🔧 Tool: {current_tool_name}")
                         print(f"   Input: {tool_call.get('args', {})}")
                 elif msg.type == 'tool':
                     content = msg.content
+                    # Check for errors and track failed tools
+                    if self._is_tool_error(content):
+                        if current_tool_name:
+                            self._handle_tool_failure(current_tool_name, content)
                     if len(content) > 200:
                         content = content[:200] + "..."
                     print(f"   Result: {content}")
+
+    def _is_tool_error(self, content: str) -> bool:
+        """Check if tool output indicates an error.
+
+        Args:
+            content: The tool output content
+
+        Returns:
+            True if the content indicates an error
+        """
+        if not content:
+            return True
+        return content.lower().startswith("error")
+
+    def _handle_tool_failure(self, tool_name: str, error_message: str):
+        """Handle a tool failure with graceful degradation.
+
+        Args:
+            tool_name: Name of the failed tool
+            error_message: The error message from the tool
+        """
+        if self.graceful_degradation:
+            self._failed_tools.add(tool_name)
+            self._error_handler.handle_tool_error(tool_name, error_message)
+
+    def get_failed_tools(self) -> Set[str]:
+        """Get the set of tools that have failed in this session.
+
+        Returns:
+            Set of tool names that have failed
+        """
+        return self._failed_tools.copy()
+
+    def reset_failed_tools(self):
+        """Reset the set of failed tools."""
+        self._failed_tools.clear()
+        self._error_handler.clear_log()
+
+    def get_degradation_status(self) -> str:
+        """Get a message about current degraded functionality.
+
+        Returns:
+            Message describing which tools are unavailable
+        """
+        return self._error_handler.get_degradation_message(list(self._failed_tools))
+
+    def get_error_summary(self) -> dict:
+        """Get a summary of errors that occurred.
+
+        Returns:
+            Dictionary with error counts by category
+        """
+        return self._error_handler.get_error_summary()
 
     def clear_memory(self):
         """Clear the conversation memory for the current session.

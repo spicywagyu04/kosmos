@@ -522,16 +522,16 @@ class TestKosmoAgentQueryRetry:
     def test_query_handles_exception_with_retry(
         self, mock_sleep, mock_llm_class, mock_create_agent
     ):
-        """Test that query retries on exceptions."""
+        """Test that query retries on transient exceptions."""
         mock_agent = MagicMock()
 
         success_msg = MagicMock()
         success_msg.type = "ai"
         success_msg.content = "Success!"
 
-        # First call raises exception, second succeeds
+        # First call raises transient exception (rate limit), second succeeds
         mock_agent.invoke.side_effect = [
-            RuntimeError("API Error"),
+            RuntimeError("Rate limit exceeded"),
             {"messages": [success_msg]},
         ]
         mock_create_agent.return_value = mock_agent
