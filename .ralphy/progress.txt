@@ -119,3 +119,46 @@
 - All 99 tests passing (48 agent tests + 12 CLI tests + 39 cosmology template tests)
 - Linting passes with ruff
 
+## 2026-02-07: Matplotlib Plotting Tool Tests
+
+### Completed Tasks
+- Created `tests/test_plotter.py` - 24 comprehensive tests for plotting functionality
+  - Tests for basic plotting (4 tests):
+    - Simple line plots
+    - Scatter plots
+    - Plots using physics constants
+    - Orbital mechanics visualizations
+  - Tests for error handling (4 tests):
+    - Syntax error detection
+    - Runtime error handling
+    - No plot created warning
+    - Division by zero handling
+  - Tests for output directory handling (2 tests):
+    - Auto-creation of output directories
+    - Nested directory creation
+  - Tests for sandbox security (4 tests):
+    - Blocking of arbitrary imports
+    - Blocking of file operations
+    - Blocking of exec calls
+    - Verification that safe builtins are available
+  - Tests for visualization types (4 tests):
+    - Bar charts
+    - Histograms
+    - Subplots
+    - Polar plots
+  - Tests for cosmology-specific examples (3 tests):
+    - Hubble diagram
+    - Galaxy rotation curves
+    - Escape velocity plots
+  - Tests for agent integration (3 tests):
+    - Tool exists in agent
+    - Tool has proper description
+    - Tool is callable
+
+### PRD Tasks Marked Complete
+- Integrate Matplotlib plotting tool
+
+### Test Results
+- All 123 tests passing (48 agent tests + 12 CLI tests + 39 cosmology template tests + 24 plotter tests)
+- Linting passes with ruff
+
