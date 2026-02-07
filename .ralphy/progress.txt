@@ -265,3 +265,71 @@
 - All 244 tests passing (48 agent + 12 CLI + 39 cosmology + 24 plotter + 47 Hohmann + 74 Kepler)
 - Linting passes with ruff
 
+## 2026-02-07: Session Memory Implementation
+
+### Completed Tasks
+- Updated `src/kosmo/agent.py` - Added session memory using LangGraph InMemorySaver
+  - Added `copy` and `uuid` imports
+  - Added `InMemorySaver` import from `langgraph.checkpoint.memory`
+  - Added `enable_memory` parameter to `KosmoAgent.__init__()` (default: True)
+  - Added `_checkpointer` instance variable for lazy initialization
+  - Added `_current_thread_id` for session tracking (initialized with UUID)
+  - Added `_sessions` dict for tracking session metadata
+  - Added `_get_checkpointer()` method for lazy checkpointer creation
+  - Updated `_get_agent()` to pass checkpointer to `create_react_agent`
+  - Updated `query()` method:
+    - Added optional `thread_id` parameter for session continuity
+    - Added session tracking (created_at, query_count, last_query_at)
+    - Uses thread_id in config when memory enabled
+    - Fixed retry logic to properly send retry messages to agent
+  - Added `new_session()` method to start fresh conversation
+  - Added `get_current_thread_id()` method for session ID retrieval
+  - Added `set_thread_id()` method to resume previous sessions
+  - Added `get_session_info()` method for session metadata access
+  - Added `list_sessions()` method with deep copy to list all sessions
+- Created `tests/test_session_memory.py` - 30 comprehensive tests
+  - Tests for session memory initialization (6 tests):
+    - Default enable_memory value
+    - Disable memory option
+    - Thread ID initialization
+    - UUID validation
+    - Empty sessions dict
+    - Lazy checkpointer initialization
+  - Tests for checkpointer functionality (4 tests):
+    - On-demand creation
+    - Instance caching
+    - None when disabled
+    - InMemorySaver type verification
+  - Tests for thread ID management (5 tests):
+    - get_current_thread_id
+    - set_thread_id
+    - new_session creates new thread
+    - new_session returns valid UUID
+    - new_session clears messages
+  - Tests for session tracking (4 tests):
+    - get_session_info for unknown thread
+    - get_session_info uses current thread
+    - list_sessions empty initially
+    - list_sessions returns deep copy
+  - Tests for query with thread_id (6 tests):
+    - Uses current thread by default
+    - Uses provided thread_id
+    - No thread when memory disabled
+    - Tracks session metadata
+    - Increments query count
+    - Updates last_query_at
+  - Tests for agent with checkpointer (2 tests):
+    - Agent created with checkpointer
+    - Agent created without checkpointer when disabled
+  - Tests for multi-turn conversation (3 tests):
+    - Same thread across queries
+    - New session creates new thread
+    - Multiple sessions tracked separately
+
+### PRD Tasks Marked Complete
+- Add session memory (LangChain memory module)
+
+### Test Results
+- All 274 tests passing (48 agent + 12 CLI + 39 cosmology + 24 plotter + 47 Hohmann + 74 Kepler + 30 session memory)
+- Linting passes with ruff
+

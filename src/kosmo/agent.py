@@ -1,12 +1,15 @@
 """ReAct agent for cosmology research."""
 
+import copy
 import os
 import time
-from typing import List, Optional, Tuple
+import uuid
+from typing import Dict, List, Optional, Tuple
 
 from dotenv import load_dotenv
 from langchain_core.tools import Tool
 from langchain_openai import ChatOpenAI
+from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.prebuilt import create_react_agent
 
 from .prompts import REACT_SYSTEM_PROMPT, enhance_prompt_for_topic
@@ -135,7 +138,8 @@ class KosmoAgent:
         verbose: bool = True,
         max_retries: int = MAX_RETRIES,
         with_tool_retry: bool = True,
-        use_topic_prompts: bool = True
+        use_topic_prompts: bool = True,
+        enable_memory: bool = True
     ):
         """Initialize the agent.
 
@@ -144,16 +148,23 @@ class KosmoAgent:
             max_retries: Maximum retry attempts for incomplete results (default: 3)
             with_tool_retry: Whether to enable retry logic for tool calls (default: True)
             use_topic_prompts: Whether to use topic-specific prompt templates (default: True)
+            enable_memory: Whether to enable session memory for multi-turn conversations (default: True)
         """
         self.verbose = verbose
         self.max_retries = max_retries
         self.with_tool_retry = with_tool_retry
         self.use_topic_prompts = use_topic_prompts
+        self.enable_memory = enable_memory
         self.messages: List = []
         # Cache agents by prompt to avoid recreating for same topic
         self._agents: dict = {}
         self._llm = None
         self._tools = None
+        # Session memory using LangGraph checkpointer
+        self._checkpointer: Optional[InMemorySaver] = None
+        self._current_thread_id: str = str(uuid.uuid4())
+        # Store session metadata (thread_id -> session info)
+        self._sessions: Dict[str, dict] = {}
 
     def _get_llm(self):
         """Get or create the LLM instance."""
@@ -175,6 +186,18 @@ class KosmoAgent:
             self._tools = create_tools(with_retry=self.with_tool_retry)
         return self._tools
 
+    def _get_checkpointer(self) -> Optional[InMemorySaver]:
+        """Get or create the checkpointer for session memory.
+
+        Returns:
+            InMemorySaver instance if memory is enabled, None otherwise
+        """
+        if not self.enable_memory:
+            return None
+        if self._checkpointer is None:
+            self._checkpointer = InMemorySaver()
+        return self._checkpointer
+
     def _get_agent(self, system_prompt: str):
         """Get or create the ReAct agent for a given system prompt.
 
@@ -188,12 +211,14 @@ class KosmoAgent:
         if system_prompt not in self._agents:
             llm = self._get_llm()
             tools = self._get_tools()
+            checkpointer = self._get_checkpointer()
 
-            # Create ReAct agent using langgraph
+            # Create ReAct agent using langgraph with optional checkpointer
             self._agents[system_prompt] = create_react_agent(
                 llm,
                 tools,
-                state_modifier=system_prompt
+                state_modifier=system_prompt,
+                checkpointer=checkpointer
             )
 
         return self._agents[system_prompt]
@@ -226,11 +251,13 @@ class KosmoAgent:
 
         return True, None
 
-    def query(self, question: str) -> str:
+    def query(self, question: str, thread_id: Optional[str] = None) -> str:
         """Run a query through the agent with retry logic for incomplete results.
 
         Args:
             question: The user's question about cosmology/astrophysics
+            thread_id: Optional thread ID for session continuity. If not provided,
+                      uses the current thread ID. Pass a new ID to start a new session.
 
         Returns:
             The agent's response
@@ -243,17 +270,33 @@ class KosmoAgent:
 
         agent = self._get_agent(system_prompt)
 
-        # Add user message to history
+        # Use provided thread_id or current thread
+        effective_thread_id = thread_id or self._current_thread_id
+
+        # Track session
+        if effective_thread_id not in self._sessions:
+            self._sessions[effective_thread_id] = {
+                "created_at": time.time(),
+                "query_count": 0
+            }
+        self._sessions[effective_thread_id]["query_count"] += 1
+        self._sessions[effective_thread_id]["last_query_at"] = time.time()
+
+        # Add user message to history (for legacy compatibility)
         self.messages.append({"role": "user", "content": question})
 
         last_response = "No response generated."
+        current_message = question
 
         for attempt in range(self.max_retries):
             try:
-                # Invoke the agent
+                # Build config with recursion limit and thread_id for memory
                 config = {"recursion_limit": MAX_ITERATIONS * 2}
+                if self.enable_memory:
+                    config["configurable"] = {"thread_id": effective_thread_id}
+
                 result = agent.invoke(
-                    {"messages": self.messages},
+                    {"messages": [{"role": "user", "content": current_message}]},
                     config=config
                 )
 
@@ -280,12 +323,13 @@ class KosmoAgent:
                             print(f"\n⚠️  Response incomplete ({retry_reason}), retrying... "
                                   f"(attempt {attempt + 2}/{self.max_retries})")
 
-                        # Add a follow-up prompt to encourage completion
-                        self.messages.append({
-                            "role": "user",
-                            "content": "Please try again to complete the previous request. "
-                                       "If a tool failed, try an alternative approach."
-                        })
+                        # Set the next message to be a retry prompt
+                        retry_message = (
+                            "Please try again to complete the previous request. "
+                            "If a tool failed, try an alternative approach."
+                        )
+                        current_message = retry_message
+                        self.messages.append({"role": "user", "content": retry_message})
                         time.sleep(RETRY_DELAY)
                         continue
 
@@ -340,5 +384,58 @@ class KosmoAgent:
                     print(f"   Result: {content}")
 
     def clear_memory(self):
-        """Clear the conversation memory."""
+        """Clear the conversation memory for the current session.
+
+        This clears the local message history but does not affect the
+        checkpointer's stored state. Use new_session() to start fresh.
+        """
         self.messages = []
+
+    def new_session(self) -> str:
+        """Start a new conversation session.
+
+        Creates a new thread ID for session memory, allowing a fresh
+        conversation without prior context.
+
+        Returns:
+            The new thread ID for the session
+        """
+        self._current_thread_id = str(uuid.uuid4())
+        self.messages = []
+        return self._current_thread_id
+
+    def get_current_thread_id(self) -> str:
+        """Get the current thread ID for session tracking.
+
+        Returns:
+            The current thread ID
+        """
+        return self._current_thread_id
+
+    def set_thread_id(self, thread_id: str) -> None:
+        """Set the current thread ID to continue a previous session.
+
+        Args:
+            thread_id: The thread ID to resume
+        """
+        self._current_thread_id = thread_id
+
+    def get_session_info(self, thread_id: Optional[str] = None) -> Optional[dict]:
+        """Get information about a session.
+
+        Args:
+            thread_id: The thread ID to look up. Uses current thread if not provided.
+
+        Returns:
+            Session info dict or None if session not found
+        """
+        tid = thread_id or self._current_thread_id
+        return self._sessions.get(tid)
+
+    def list_sessions(self) -> Dict[str, dict]:
+        """List all tracked sessions.
+
+        Returns:
+            Dictionary mapping thread IDs to session info (deep copy)
+        """
+        return copy.deepcopy(self._sessions)
