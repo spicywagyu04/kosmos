@@ -307,7 +307,7 @@ Use this checklist to track progress through the 3-day build. Mark items as comp
 
 ### 13.3 Polish and Deploy
 
-- [ ] Write unit tests for all tool functions
+- [x] Write unit tests for all tool functions
 - [ ] Write integration tests for agent flow
 - [ ] Run end-to-end tests with 10+ queries
 - [ ] Write README.md with setup instructions and usage examples

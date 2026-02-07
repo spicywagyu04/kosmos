@@ -445,3 +445,76 @@
 - All 386 tests passing (48 agent + 12 CLI + 39 cosmology + 24 plotter + 47 Hohmann + 74 Kepler + 30 session memory + 88 error handling + 24 cosmology queries)
 - Linting passes with ruff
 
+## 2026-02-07: Unit Tests for All Tool Functions
+
+### Completed Tasks
+- Created `tests/test_code_executor.py` - 61 comprehensive unit tests for code execution tool
+  - Tests for constants (5 tests):
+    - Allowed modules list (math, numpy, sympy, scipy, etc.)
+  - Tests for basic execution (6 tests):
+    - Simple arithmetic, division, multiplication, power, no output, multiple prints
+  - Tests for NumPy functionality (6 tests):
+    - Array creation, linspace, sum, mean, sqrt, aliases (np/numpy)
+  - Tests for SymPy functionality (5 tests):
+    - Symbol creation, expand, differentiation, integration, aliases (sp/sympy)
+  - Tests for physics constants (9 tests):
+    - G, c, M_sun, M_earth, R_earth, AU, pc, h, k_B
+  - Tests for physics calculations (4 tests):
+    - Escape velocity, Schwarzschild radius, orbital velocity, orbital period
+  - Tests for error handling (7 tests):
+    - Syntax errors, undefined variables, division by zero, type errors, index errors, empty code, whitespace
+  - Tests for sandbox security (7 tests):
+    - Import blocking, subprocess blocking, open blocking, exec blocking, eval blocking, compile blocking, safe builtins
+  - Tests for math module (5 tests):
+    - pi, e, sqrt, sin, log
+  - Tests for complex code (6 tests):
+    - For loops, while loops, conditionals, function definitions, list comprehensions, dictionaries
+  - Tests for agent integration (3 tests):
+    - Tool exists, proper description, callable
+
+- Created `tests/test_knowledge_base.py` - 27 comprehensive unit tests for Wikipedia tool
+  - Tests for basic search (3 tests):
+    - Successful search, returns title, returns URL
+  - Tests for sentence truncation (3 tests):
+    - Default 5 sentences, custom limit, fewer than limit
+  - Tests for disambiguation handling (1 test):
+    - Disambiguation page detection
+  - Tests for 404 fallback (2 tests):
+    - Triggers search API fallback, no results found
+  - Tests for error handling (5 tests):
+    - Timeout, connection error, request exception, non-200 status, JSON decode error
+  - Tests for URL encoding (2 tests):
+    - Spaces to underscores, User-Agent header
+  - Tests for missing data (3 tests):
+    - Missing extract, missing URL, missing title
+  - Tests for _search_and_get_summary helper (3 tests):
+    - Search returns results, API error, exception handling
+  - Tests for agent integration (3 tests):
+    - Tool exists, proper description, callable
+
+- Created `tests/test_web_search.py` - 23 comprehensive unit tests for Tavily web search tool
+  - Tests for API key handling (2 tests):
+    - Missing API key, empty API key
+  - Tests for package availability (1 test):
+    - Tavily not installed error
+  - Tests for mocked client (8 tests):
+    - Successful search, multiple results, no results, result formatting
+    - Content truncation (300 chars), max_results parameter, search depth, domain filtering
+  - Tests for error handling (3 tests):
+    - API exception, network error, invalid API key
+  - Tests for missing fields (4 tests):
+    - Missing title, URL, content, results key
+  - Tests for agent integration (3 tests):
+    - Tool exists, proper description, callable
+  - Tests for default parameters (1 test):
+    - Default max_results is 5
+  - Tests for client initialization (1 test):
+    - API key passed to client
+
+### PRD Tasks Marked Complete
+- Write unit tests for all tool functions
+
+### Test Results
+- All 497 tests passing (48 agent + 12 CLI + 39 cosmology + 24 plotter + 47 Hohmann + 74 Kepler + 30 session memory + 88 error handling + 24 cosmology queries + 61 code executor + 27 knowledge base + 23 web search)
+- Linting passes with ruff
+
