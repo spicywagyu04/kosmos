@@ -402,3 +402,46 @@
 - All 362 tests passing (48 agent + 12 CLI + 39 cosmology + 24 plotter + 47 Hohmann + 74 Kepler + 30 session memory + 88 error handling)
 - Linting passes with ruff
 
+## 2026-02-07: Test with 5+ Diverse Cosmology Queries
+
+### Completed Tasks
+- Created `tests/test_cosmology_queries.py` - 24 comprehensive integration tests
+  - Tests for diverse cosmology queries (7 tests):
+    - Escape velocity calculation
+    - Schwarzschild radius of black holes
+    - Dark matter explanation
+    - Exoplanet habitable zone calculation
+    - CMB temperature query
+    - Orbital period of Mars
+    - Hubble constant and tension
+  - Tests for topic detection (5 tests):
+    - Dark matter topic detection
+    - Exoplanet topic detection
+    - CMB topic detection
+    - General query handling
+    - WIMP keyword detection
+  - Tests for prompt enhancement (4 tests):
+    - Dark matter prompt enhancement
+    - Exoplanet prompt enhancement
+    - CMB prompt enhancement
+    - General query no enhancement
+  - Tests for tool selection (4 tests):
+    - Code executor availability
+    - Web search availability
+    - Wikipedia availability
+    - Plotter availability
+  - Tests for multi-tool query flow (2 tests):
+    - Hohmann transfer query (multi-tool)
+    - Research and calculate query (multi-tool)
+  - Tests for query error handling (1 test):
+    - Recovery from tool failure
+  - Tests for session memory (1 test):
+    - Multi-turn cosmology conversation
+
+### PRD Tasks Marked Complete
+- Test with 5+ diverse cosmology queries
+
+### Test Results
+- All 386 tests passing (48 agent + 12 CLI + 39 cosmology + 24 plotter + 47 Hohmann + 74 Kepler + 30 session memory + 88 error handling + 24 cosmology queries)
+- Linting passes with ruff
+
