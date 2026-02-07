@@ -209,3 +209,59 @@
 - All 170 tests passing (48 agent + 12 CLI + 39 cosmology + 24 plotter + 47 Hohmann)
 - Linting passes with ruff
 
+## 2026-02-07: Kepler Orbit Calculator Example
+
+### Completed Tasks
+- Created `examples/kepler_orbit.py` - Kepler orbit calculator module
+  - Added physical constants (G, M_SUN, M_EARTH, AU, SECONDS_PER_DAY, SECONDS_PER_YEAR)
+  - Created `OrbitType` enum for classifying orbits (circular, elliptical, parabolic, hyperbolic)
+  - Created `KeplerOrbit` dataclass with all orbital elements:
+    - Primary elements: semi-major axis, eccentricity, inclination, longitude of ascending node, argument of periapsis, true anomaly
+    - Derived properties: semi-minor axis, periapsis, apoapsis, orbital period, mean motion, specific orbital energy, specific angular momentum
+    - Methods: `radius_at_true_anomaly()`, `velocity_at_radius()`, `velocity_at_true_anomaly()`, `position_at_true_anomaly()`, `period_in_days()`, `period_in_years()`
+  - Implemented `calculate_orbit_from_period()` - Calculate orbit from orbital period using Kepler's third law
+  - Implemented `calculate_orbit_from_radii()` - Calculate orbit from periapsis and apoapsis distances
+  - Implemented `calculate_orbit_from_state()` - Calculate orbit from position and velocity (state vector)
+  - Implemented `calculate_escape_velocity()` - Calculate escape velocity at given distance
+  - Implemented `calculate_circular_velocity()` - Calculate circular orbital velocity
+  - Implemented `calculate_orbital_elements()` - Calculate elements using Kepler's third law ratios
+  - Implemented `generate_orbit_plot_code()` - Generate matplotlib visualization code
+    - Supports elliptical, circular, and hyperbolic orbits
+    - Optional velocity vectors at periapsis/apoapsis
+    - Customizable body names and titles
+  - Implemented `get_exoplanet_example()` - Pre-defined exoplanet examples
+    - Kepler-442b (super-Earth in habitable zone)
+    - Proxima Centauri b (closest known exoplanet)
+    - TRAPPIST-1e (TRAPPIST-1 system planet)
+- Updated `examples/__init__.py` - Added exports for all Kepler orbit functions
+- Created `tests/test_kepler_orbit.py` - 74 comprehensive tests
+  - Tests for physical constants (6 tests)
+  - Tests for OrbitType enum (1 test)
+  - Tests for KeplerOrbit dataclass (15 tests):
+    - Circular, elliptical, and hyperbolic orbit creation
+    - Derived property calculations
+    - Velocity and position methods
+    - String representation
+  - Tests for calculate_orbit_from_period function (8 tests)
+  - Tests for calculate_orbit_from_radii function (6 tests)
+  - Tests for calculate_orbit_from_state function (5 tests)
+  - Tests for calculate_escape_velocity function (4 tests)
+  - Tests for calculate_circular_velocity function (3 tests)
+  - Tests for calculate_orbital_elements function (3 tests)
+  - Tests for generate_orbit_plot_code function (7 tests)
+  - Tests for plot code execution (2 tests)
+  - Tests for get_exoplanet_example function (8 tests)
+  - Tests for physics accuracy (6 tests):
+    - Kepler's third law verification
+    - Vis-viva equation validation
+    - Angular momentum conservation
+    - Energy conservation
+    - Mars and Jupiter orbital period verification
+
+### PRD Tasks Marked Complete
+- Build Kepler orbit calculator example
+
+### Test Results
+- All 244 tests passing (48 agent + 12 CLI + 39 cosmology + 24 plotter + 47 Hohmann + 74 Kepler)
+- Linting passes with ruff
+

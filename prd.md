@@ -298,7 +298,7 @@ Use this checklist to track progress through the 3-day build. Mark items as comp
 - [x] Add cosmology-specific prompt templates (dark matter, exoplanets, CMB)
 - [x] Integrate Matplotlib plotting tool
 - [x] Build Hohmann transfer orbit simulation example
-- [ ] Build Kepler orbit calculator example
+- [x] Build Kepler orbit calculator example
 - [ ] Add session memory (LangChain memory module)
 - [ ] Implement error handling and graceful degradation
 - [ ] Test with 5+ diverse cosmology queries
