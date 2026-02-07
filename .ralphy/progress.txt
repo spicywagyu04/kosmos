@@ -45,3 +45,31 @@
 - All 31 tests passing (19 agent tests + 12 CLI tests)
 - Linting passes with ruff
 
+## 2026-02-07: Iterative Loop with Retry Logic
+
+### Completed Tasks
+- Updated `src/kosmo/agent.py` - Added retry logic for tool calls and incomplete responses
+  - Added `_is_result_incomplete()` function to detect failed tool results
+  - Added `_wrap_tool_with_retry()` function to wrap tools with automatic retry on transient failures
+  - Added `_check_response_complete()` method to detect incomplete agent responses
+  - Added `_extract_response()` helper method for cleaner response extraction
+  - Updated `create_tools()` to accept `with_retry` parameter (default: True)
+  - Updated `KosmoAgent.__init__()` with `max_retries` and `with_tool_retry` parameters
+  - Updated `query()` method with iterative retry loop for incomplete responses
+  - Retry logic uses exponential backoff for transient errors (rate limits, timeouts, connection errors)
+- Added 29 new tests in `tests/test_agent.py` for retry functionality
+  - Tests for retry constants (MAX_RETRIES, RETRY_DELAY, INCOMPLETE_INDICATORS)
+  - Tests for `_is_result_incomplete()` function (8 tests)
+  - Tests for `_wrap_tool_with_retry()` function (4 tests)
+  - Tests for KosmoAgent retry initialization (4 tests)
+  - Tests for `create_tools()` with retry parameter (2 tests)
+  - Tests for `_check_response_complete()` method (4 tests)
+  - Tests for query retry functionality (4 tests)
+
+### PRD Tasks Marked Complete
+- Implement iterative loop with retry logic for incomplete results
+
+### Test Results
+- All 60 tests passing (48 agent tests + 12 CLI tests)
+- Linting passes with ruff
+

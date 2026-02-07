@@ -4,7 +4,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kosmo.agent import KosmoAgent, create_tools
+from kosmo.agent import (
+    INCOMPLETE_INDICATORS,
+    MAX_RETRIES,
+    RETRY_DELAY,
+    KosmoAgent,
+    _is_result_incomplete,
+    _wrap_tool_with_retry,
+    create_tools,
+)
 
 
 class TestCreateTools:
@@ -255,3 +263,316 @@ class TestReActLoopVerification:
         """Test that max iterations is properly configured."""
         from kosmo.agent import MAX_ITERATIONS
         assert MAX_ITERATIONS == 10  # As specified in PRD
+
+
+class TestRetryConstants:
+    """Tests for retry logic constants."""
+
+    def test_max_retries_default(self):
+        """Test that MAX_RETRIES has a sensible default."""
+        assert MAX_RETRIES == 3
+
+    def test_retry_delay_default(self):
+        """Test that RETRY_DELAY has a sensible default."""
+        assert RETRY_DELAY == 1.0
+
+    def test_incomplete_indicators_exist(self):
+        """Test that incomplete indicators list is defined."""
+        assert len(INCOMPLETE_INDICATORS) > 0
+        assert "error:" in INCOMPLETE_INDICATORS
+        assert "rate limit" in INCOMPLETE_INDICATORS
+
+
+class TestIsResultIncomplete:
+    """Tests for _is_result_incomplete function."""
+
+    def test_empty_result_is_incomplete(self):
+        """Test that empty string is considered incomplete."""
+        assert _is_result_incomplete("") is True
+
+    def test_none_result_is_incomplete(self):
+        """Test that None is considered incomplete."""
+        assert _is_result_incomplete(None) is True
+
+    def test_error_result_is_incomplete(self):
+        """Test that error messages are considered incomplete."""
+        assert _is_result_incomplete("Error: something went wrong") is True
+
+    def test_rate_limit_is_incomplete(self):
+        """Test that rate limit messages are incomplete."""
+        assert _is_result_incomplete("Rate limit exceeded, try again later") is True
+
+    def test_timeout_is_incomplete(self):
+        """Test that timeout messages are incomplete."""
+        assert _is_result_incomplete("Request timeout after 30 seconds") is True
+
+    def test_no_results_is_incomplete(self):
+        """Test that 'no results found' is incomplete."""
+        assert _is_result_incomplete("No results found for your query") is True
+
+    def test_valid_result_is_complete(self):
+        """Test that valid results are not flagged as incomplete."""
+        assert _is_result_incomplete("Search Results for: black holes\n1. Title...") is False
+
+    def test_calculation_result_is_complete(self):
+        """Test that calculation results are not flagged as incomplete."""
+        assert _is_result_incomplete("Output:\n11.2 km/s") is False
+
+
+class TestWrapToolWithRetry:
+    """Tests for _wrap_tool_with_retry function."""
+
+    def test_successful_call_no_retry(self):
+        """Test that successful calls don't trigger retries."""
+        call_count = 0
+
+        def mock_tool(arg):
+            nonlocal call_count
+            call_count += 1
+            return f"Success: {arg}"
+
+        wrapped = _wrap_tool_with_retry(mock_tool, max_retries=3)
+        result = wrapped("test")
+
+        assert result == "Success: test"
+        assert call_count == 1
+
+    def test_exception_triggers_retry(self):
+        """Test that exceptions trigger retries."""
+        call_count = 0
+
+        def mock_tool(arg):
+            nonlocal call_count
+            call_count += 1
+            if call_count < 3:
+                raise ConnectionError("Network error")
+            return "Success"
+
+        with patch("kosmo.agent.time.sleep"):  # Skip actual delays
+            wrapped = _wrap_tool_with_retry(mock_tool, max_retries=3)
+            result = wrapped("test")
+
+        assert result == "Success"
+        assert call_count == 3
+
+    def test_max_retries_exceeded(self):
+        """Test that max retries returns error message."""
+        def mock_tool(arg):
+            raise RuntimeError("Always fails")
+
+        with patch("kosmo.agent.time.sleep"):
+            wrapped = _wrap_tool_with_retry(mock_tool, max_retries=2)
+            result = wrapped("test")
+
+        assert "Error after 2 attempts" in result
+        assert "Always fails" in result
+
+    def test_rate_limit_triggers_retry(self):
+        """Test that rate limit response triggers retry."""
+        call_count = 0
+
+        def mock_tool(arg):
+            nonlocal call_count
+            call_count += 1
+            if call_count < 2:
+                return "Rate limit exceeded"
+            return "Success"
+
+        with patch("kosmo.agent.time.sleep"):
+            wrapped = _wrap_tool_with_retry(mock_tool, max_retries=3)
+            result = wrapped("test")
+
+        assert result == "Success"
+        assert call_count == 2
+
+
+class TestKosmoAgentRetryInit:
+    """Tests for KosmoAgent retry-related initialization."""
+
+    def test_init_default_max_retries(self):
+        """Test that agent defaults to MAX_RETRIES."""
+        agent = KosmoAgent()
+        assert agent.max_retries == MAX_RETRIES
+
+    def test_init_custom_max_retries(self):
+        """Test that agent accepts custom max_retries."""
+        agent = KosmoAgent(max_retries=5)
+        assert agent.max_retries == 5
+
+    def test_init_default_with_tool_retry(self):
+        """Test that agent defaults to with_tool_retry=True."""
+        agent = KosmoAgent()
+        assert agent.with_tool_retry is True
+
+    def test_init_disable_tool_retry(self):
+        """Test that tool retry can be disabled."""
+        agent = KosmoAgent(with_tool_retry=False)
+        assert agent.with_tool_retry is False
+
+
+class TestCreateToolsWithRetry:
+    """Tests for create_tools with retry parameter."""
+
+    def test_create_tools_with_retry_default(self):
+        """Test that create_tools enables retry by default."""
+        tools = create_tools()
+        assert len(tools) == 4
+
+    def test_create_tools_without_retry(self):
+        """Test that create_tools can disable retry."""
+        tools = create_tools(with_retry=False)
+        assert len(tools) == 4
+
+
+class TestKosmoAgentCheckResponseComplete:
+    """Tests for _check_response_complete method."""
+
+    def test_empty_response_incomplete(self):
+        """Test that empty response is incomplete."""
+        agent = KosmoAgent()
+        is_complete, reason = agent._check_response_complete("")
+        assert is_complete is False
+        assert reason == "empty_response"
+
+    def test_no_response_message_incomplete(self):
+        """Test that 'No response generated.' is incomplete."""
+        agent = KosmoAgent()
+        is_complete, reason = agent._check_response_complete("No response generated.")
+        assert is_complete is False
+        assert reason == "empty_response"
+
+    def test_tool_failure_response_incomplete(self):
+        """Test that tool failure responses are incomplete."""
+        agent = KosmoAgent()
+        is_complete, reason = agent._check_response_complete("I was unable to complete the calculation.")
+        assert is_complete is False
+        assert reason == "tool_failure"
+
+    def test_valid_response_complete(self):
+        """Test that valid responses are marked complete."""
+        agent = KosmoAgent()
+        is_complete, reason = agent._check_response_complete(
+            "The escape velocity from Earth is 11.2 km/s."
+        )
+        assert is_complete is True
+        assert reason is None
+
+
+class TestKosmoAgentQueryRetry:
+    """Tests for query retry functionality."""
+
+    @patch("kosmo.agent.create_react_agent")
+    @patch("kosmo.agent.ChatOpenAI")
+    @patch("kosmo.agent.time.sleep")
+    @patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"})
+    def test_query_retries_on_incomplete_response(
+        self, mock_sleep, mock_llm_class, mock_create_agent
+    ):
+        """Test that query retries when response indicates failure."""
+        mock_agent = MagicMock()
+
+        # First call returns incomplete, second returns complete
+        incomplete_msg = MagicMock()
+        incomplete_msg.type = "ai"
+        incomplete_msg.content = "I was unable to complete the calculation."
+
+        complete_msg = MagicMock()
+        complete_msg.type = "ai"
+        complete_msg.content = "The escape velocity is 11.2 km/s."
+
+        mock_agent.invoke.side_effect = [
+            {"messages": [incomplete_msg]},
+            {"messages": [complete_msg]},
+        ]
+        mock_create_agent.return_value = mock_agent
+
+        agent = KosmoAgent(verbose=False, max_retries=3)
+        result = agent.query("Calculate escape velocity")
+
+        assert result == "The escape velocity is 11.2 km/s."
+        assert mock_agent.invoke.call_count == 2
+
+    @patch("kosmo.agent.create_react_agent")
+    @patch("kosmo.agent.ChatOpenAI")
+    @patch("kosmo.agent.time.sleep")
+    @patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"})
+    def test_query_returns_best_after_max_retries(
+        self, mock_sleep, mock_llm_class, mock_create_agent
+    ):
+        """Test that query returns best response after max retries."""
+        mock_agent = MagicMock()
+
+        incomplete_msg = MagicMock()
+        incomplete_msg.type = "ai"
+        incomplete_msg.content = "I was unable to complete the request."
+
+        mock_agent.invoke.return_value = {"messages": [incomplete_msg]}
+        mock_create_agent.return_value = mock_agent
+
+        agent = KosmoAgent(verbose=False, max_retries=2)
+        result = agent.query("Test query")
+
+        assert result == "I was unable to complete the request."
+        assert mock_agent.invoke.call_count == 2
+
+    @patch("kosmo.agent.create_react_agent")
+    @patch("kosmo.agent.ChatOpenAI")
+    @patch("kosmo.agent.time.sleep")
+    @patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"})
+    def test_query_handles_exception_with_retry(
+        self, mock_sleep, mock_llm_class, mock_create_agent
+    ):
+        """Test that query retries on exceptions."""
+        mock_agent = MagicMock()
+
+        success_msg = MagicMock()
+        success_msg.type = "ai"
+        success_msg.content = "Success!"
+
+        # First call raises exception, second succeeds
+        mock_agent.invoke.side_effect = [
+            RuntimeError("API Error"),
+            {"messages": [success_msg]},
+        ]
+        mock_create_agent.return_value = mock_agent
+
+        agent = KosmoAgent(verbose=False, max_retries=3)
+        result = agent.query("Test query")
+
+        assert result == "Success!"
+        assert mock_agent.invoke.call_count == 2
+
+    @patch("kosmo.agent.create_react_agent")
+    @patch("kosmo.agent.ChatOpenAI")
+    @patch("kosmo.agent.time.sleep")
+    @patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"})
+    def test_query_adds_retry_message_to_history(
+        self, mock_sleep, mock_llm_class, mock_create_agent
+    ):
+        """Test that retry adds follow-up message to encourage completion."""
+        mock_agent = MagicMock()
+
+        incomplete_msg = MagicMock()
+        incomplete_msg.type = "ai"
+        incomplete_msg.content = "I was unable to complete."
+
+        complete_msg = MagicMock()
+        complete_msg.type = "ai"
+        complete_msg.content = "Done!"
+
+        mock_agent.invoke.side_effect = [
+            {"messages": [incomplete_msg]},
+            {"messages": [complete_msg]},
+        ]
+        mock_create_agent.return_value = mock_agent
+
+        agent = KosmoAgent(verbose=False, max_retries=3)
+        agent.query("Test")
+
+        # Check that second invoke had the retry message
+        second_call_messages = mock_agent.invoke.call_args_list[1][0][0]["messages"]
+        assert any(
+            "try again" in str(msg.get("content", "")).lower()
+            for msg in second_call_messages
+            if isinstance(msg, dict)
+        )
