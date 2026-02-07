@@ -162,3 +162,50 @@
 - All 123 tests passing (48 agent tests + 12 CLI tests + 39 cosmology template tests + 24 plotter tests)
 - Linting passes with ruff
 
+## 2026-02-07: Hohmann Transfer Orbit Simulation Example
+
+### Completed Tasks
+- Created `examples/hohmann_transfer.py` - Hohmann transfer orbit simulation module
+  - Added physical constants (G, M_SUN, AU) and planetary data (PLANETS dict)
+  - Created `HohmannTransferResult` dataclass with orbital parameters and delta-v values
+  - Implemented `calculate_hohmann_transfer()` - Core function using vis-viva equation
+    - Calculates transfer orbit semi-major axis and eccentricity
+    - Computes circular velocities at both orbits
+    - Calculates periapsis/apoapsis velocities on transfer orbit
+    - Determines delta-v requirements for both burns
+    - Validates input parameters (positive radii, r1 < r2)
+  - Implemented `calculate_planetary_transfer()` - Wrapper for planet-to-planet transfers
+    - Case-insensitive planet name lookup
+    - Automatic radius swapping for inward transfers
+  - Implemented `generate_transfer_plot_code()` - Generates matplotlib visualization code
+    - Draws inner/outer circular orbits
+    - Draws transfer ellipse arc
+    - Marks departure and arrival points
+    - Adds text box with transfer time and delta-v info
+  - Implemented `get_earth_mars_example()` - Convenience function for common use case
+- Created `examples/__init__.py` - Package initialization with exports
+- Created `tests/test_hohmann_transfer.py` - 47 comprehensive tests
+  - Tests for physical constants (6 tests)
+  - Tests for HohmannTransferResult dataclass (2 tests)
+  - Tests for calculate_hohmann_transfer function (15 tests):
+    - Transfer time validation
+    - Delta-v calculations
+    - Semi-major axis and eccentricity
+    - Velocity calculations
+    - Error handling for invalid inputs
+  - Tests for calculate_planetary_transfer function (6 tests)
+  - Tests for generate_transfer_plot_code function (6 tests)
+  - Tests for plot code execution (1 test)
+  - Tests for get_earth_mars_example function (5 tests)
+  - Tests for physics accuracy (5 tests):
+    - Orbital velocities against known values
+    - Kepler's third law verification
+    - Vis-viva equation validation
+
+### PRD Tasks Marked Complete
+- Build Hohmann transfer orbit simulation example
+
+### Test Results
+- All 170 tests passing (48 agent + 12 CLI + 39 cosmology + 24 plotter + 47 Hohmann)
+- Linting passes with ruff
+
