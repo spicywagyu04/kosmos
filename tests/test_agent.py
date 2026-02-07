@@ -67,9 +67,9 @@ class TestKosmoAgentInit:
         assert agent.messages == []
 
     def test_init_no_agent_created(self):
-        """Test that internal agent is not created until needed."""
+        """Test that internal agent cache is empty until needed."""
         agent = KosmoAgent()
-        assert agent._agent is None
+        assert agent._agents == {}
 
 
 class TestKosmoAgentMemory:

@@ -73,3 +73,49 @@
 - All 60 tests passing (48 agent tests + 12 CLI tests)
 - Linting passes with ruff
 
+## 2026-02-07: Cosmology-Specific Prompt Templates
+
+### Completed Tasks
+- Created `src/kosmo/prompts/cosmology_templates.py` - Topic-specific context templates
+  - Added `DARK_MATTER_CONTEXT` - Detailed context for dark matter queries including:
+    - Key concepts (CDM, WIMPs, axions, MOND, NFW profiles)
+    - Important equations (rotation curves, virial theorem, NFW density profile)
+    - Current research areas (LUX-ZEPLIN, XENONnT, CERN searches)
+    - Key values (local DM density, DM-to-baryon ratio)
+  - Added `EXOPLANET_CONTEXT` - Detailed context for exoplanet queries including:
+    - Detection methods (transit, radial velocity, direct imaging, microlensing)
+    - Key concepts (habitable zone, equilibrium temperature, tidal locking)
+    - Important equations (Kepler's laws, Hill sphere, Roche limit)
+    - Current missions (Kepler, TESS, JWST, CHEOPS)
+  - Added `CMB_CONTEXT` - Detailed context for CMB queries including:
+    - Key concepts (blackbody at 2.725K, recombination, anisotropies, polarization)
+    - Power spectrum analysis (angular power spectrum, acoustic peaks, BAO)
+    - Cosmological parameters (H₀, Ω_b, Ω_c, Ω_Λ, n_s)
+    - Key experiments (COBE, WMAP, Planck, ACT, SPT)
+  - Added topic detection keywords for each domain
+  - Added `detect_topic()` function for automatic topic classification
+  - Added `get_topic_context()` function to retrieve context by topic name
+  - Added `enhance_prompt_for_topic()` function to augment base prompts
+- Updated `src/kosmo/prompts/__init__.py` - Exported all new functions and constants
+- Updated `src/kosmo/agent.py` - Integrated topic-enhanced prompts
+  - Added `use_topic_prompts` parameter to `KosmoAgent.__init__()` (default: True)
+  - Changed from single `_agent` cache to `_agents` dict for per-prompt caching
+  - Added `_get_llm()` and `_get_tools()` helper methods for lazy initialization
+  - Updated `_get_agent()` to accept system_prompt parameter and cache by prompt
+  - Updated `query()` to enhance prompts based on detected query topic
+- Created `tests/test_cosmology_templates.py` - 39 tests for cosmology templates
+  - Tests for context template content (11 tests)
+  - Tests for keyword lists (4 tests)
+  - Tests for `detect_topic()` function (11 tests)
+  - Tests for `get_topic_context()` function (5 tests)
+  - Tests for `enhance_prompt_for_topic()` function (5 tests)
+  - Tests for agent integration (3 tests)
+- Updated `tests/test_agent.py` - Fixed test for new agent cache structure
+
+### PRD Tasks Marked Complete
+- Add cosmology-specific prompt templates (dark matter, exoplanets, CMB)
+
+### Test Results
+- All 99 tests passing (48 agent tests + 12 CLI tests + 39 cosmology template tests)
+- Linting passes with ruff
+

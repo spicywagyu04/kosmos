@@ -9,7 +9,7 @@ from langchain_core.tools import Tool
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 
-from .prompts import REACT_SYSTEM_PROMPT
+from .prompts import REACT_SYSTEM_PROMPT, enhance_prompt_for_topic
 from .tools import create_plot, execute_code, search_wikipedia, web_search
 
 # Load environment variables
@@ -134,7 +134,8 @@ class KosmoAgent:
         self,
         verbose: bool = True,
         max_retries: int = MAX_RETRIES,
-        with_tool_retry: bool = True
+        with_tool_retry: bool = True,
+        use_topic_prompts: bool = True
     ):
         """Initialize the agent.
 
@@ -142,36 +143,60 @@ class KosmoAgent:
             verbose: Whether to print intermediate steps (default: True)
             max_retries: Maximum retry attempts for incomplete results (default: 3)
             with_tool_retry: Whether to enable retry logic for tool calls (default: True)
+            use_topic_prompts: Whether to use topic-specific prompt templates (default: True)
         """
         self.verbose = verbose
         self.max_retries = max_retries
         self.with_tool_retry = with_tool_retry
+        self.use_topic_prompts = use_topic_prompts
         self.messages: List = []
-        self._agent = None
+        # Cache agents by prompt to avoid recreating for same topic
+        self._agents: dict = {}
+        self._llm = None
+        self._tools = None
 
-    def _get_agent(self):
-        """Get or create the ReAct agent."""
-        if self._agent is None:
+    def _get_llm(self):
+        """Get or create the LLM instance."""
+        if self._llm is None:
             api_key = os.getenv("OPENAI_API_KEY")
             if not api_key:
                 raise ValueError("OPENAI_API_KEY not found in environment variables")
 
-            llm = ChatOpenAI(
+            self._llm = ChatOpenAI(
                 model="gpt-4o-mini",
                 temperature=0,
                 api_key=api_key
             )
+        return self._llm
 
-            tools = create_tools(with_retry=self.with_tool_retry)
+    def _get_tools(self):
+        """Get or create the tools list."""
+        if self._tools is None:
+            self._tools = create_tools(with_retry=self.with_tool_retry)
+        return self._tools
+
+    def _get_agent(self, system_prompt: str):
+        """Get or create the ReAct agent for a given system prompt.
+
+        Args:
+            system_prompt: The system prompt to use for the agent
+
+        Returns:
+            The ReAct agent instance
+        """
+        # Use prompt as cache key
+        if system_prompt not in self._agents:
+            llm = self._get_llm()
+            tools = self._get_tools()
 
             # Create ReAct agent using langgraph
-            self._agent = create_react_agent(
+            self._agents[system_prompt] = create_react_agent(
                 llm,
                 tools,
-                state_modifier=REACT_SYSTEM_PROMPT
+                state_modifier=system_prompt
             )
 
-        return self._agent
+        return self._agents[system_prompt]
 
     def _check_response_complete(self, response: str) -> Tuple[bool, Optional[str]]:
         """Check if the agent's response is complete or needs retry.
@@ -210,7 +235,13 @@ class KosmoAgent:
         Returns:
             The agent's response
         """
-        agent = self._get_agent()
+        # Determine the appropriate system prompt based on the query topic
+        if self.use_topic_prompts:
+            system_prompt = enhance_prompt_for_topic(REACT_SYSTEM_PROMPT, question)
+        else:
+            system_prompt = REACT_SYSTEM_PROMPT
+
+        agent = self._get_agent(system_prompt)
 
         # Add user message to history
         self.messages.append({"role": "user", "content": question})

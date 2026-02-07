@@ -295,7 +295,7 @@ Use this checklist to track progress through the 3-day build. Mark items as comp
 ### 13.2 Features and Autonomy
 
 - [x] Implement iterative loop with retry logic for incomplete results
-- [ ] Add cosmology-specific prompt templates (dark matter, exoplanets, CMB)
+- [x] Add cosmology-specific prompt templates (dark matter, exoplanets, CMB)
 - [ ] Integrate Matplotlib plotting tool
 - [ ] Build Hohmann transfer orbit simulation example
 - [ ] Build Kepler orbit calculator example
