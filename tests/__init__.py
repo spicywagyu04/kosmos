@@ -1,0 +1,1 @@
+"""Kosmo test suite."""

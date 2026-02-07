@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kosmo"
+version = "1.0.0"
+description = "Cosmology Research Agent - An autonomous AI system for universe exploration"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = [
+    "langchain>=0.1.0",
+    "langchain-openai>=0.0.5",
+    "langchain-community>=0.0.10",
+    "langgraph>=0.0.10",
+    "openai>=1.12.0",
+    "numpy>=1.24.0",
+    "sympy>=1.12",
+    "matplotlib>=3.7.0",
+    "requests>=2.31.0",
+    "tavily-python>=0.3.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+kosmo = "kosmo.cli:main"
+
+[project.urls]
+"Homepage" = "https://github.com/your-username/kosmo"
+"Bug Tracker" = "https://github.com/your-username/kosmo/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
