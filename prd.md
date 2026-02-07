@@ -289,8 +289,8 @@ Use this checklist to track progress through the 3-day build. Mark items as comp
 - [x] Implement code execution tool (Python REPL sandbox)
 - [x] Implement knowledge base tool (Wikipedia API)
 - [x] Create basic CLI interface for query input/output
-- [ ] Test with simple query: escape velocity calculation
-- [ ] Verify agent Thought-Action-Observation loop executes correctly
+- [x] Test with simple query: escape velocity calculation
+- [x] Verify agent Thought-Action-Observation loop executes correctly
 
 ### 13.2 Features and Autonomy
 
