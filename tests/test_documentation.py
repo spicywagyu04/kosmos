@@ -222,3 +222,68 @@ class TestEthicalUsageContent:
     def test_has_last_updated_date(self, ethical_content):
         """Test that document has a last updated date."""
         assert "2026" in ethical_content or "updated" in ethical_content.lower()
+
+
+class TestLicenseFile:
+    """Tests for MIT LICENSE file."""
+
+    def test_license_file_exists(self):
+        """Test that LICENSE file exists in project root."""
+        license_path = PROJECT_ROOT / "LICENSE"
+        assert license_path.exists(), "LICENSE file should exist in project root"
+
+    def test_license_file_not_empty(self):
+        """Test that LICENSE file is not empty."""
+        license_path = PROJECT_ROOT / "LICENSE"
+        content = license_path.read_text()
+        assert len(content) > 0, "LICENSE file should not be empty"
+
+    def test_license_is_mit(self):
+        """Test that LICENSE file contains MIT License."""
+        license_path = PROJECT_ROOT / "LICENSE"
+        content = license_path.read_text()
+        assert "MIT License" in content, "LICENSE should be MIT License"
+
+    def test_license_has_copyright_notice(self):
+        """Test that LICENSE has copyright notice."""
+        license_path = PROJECT_ROOT / "LICENSE"
+        content = license_path.read_text()
+        assert "Copyright" in content, "LICENSE should have copyright notice"
+
+    def test_license_has_year(self):
+        """Test that LICENSE has a year in copyright."""
+        license_path = PROJECT_ROOT / "LICENSE"
+        content = license_path.read_text()
+        assert "2026" in content, "LICENSE should have current year (2026)"
+
+    def test_license_has_permission_grant(self):
+        """Test that LICENSE has permission grant clause."""
+        license_path = PROJECT_ROOT / "LICENSE"
+        content = license_path.read_text()
+        assert "Permission is hereby granted" in content
+
+    def test_license_has_no_warranty(self):
+        """Test that LICENSE has no warranty clause."""
+        license_path = PROJECT_ROOT / "LICENSE"
+        content = license_path.read_text()
+        assert "WITHOUT WARRANTY" in content or "AS IS" in content
+
+    def test_license_allows_commercial_use(self):
+        """Test that LICENSE allows commercial use (MIT characteristic)."""
+        license_path = PROJECT_ROOT / "LICENSE"
+        content = license_path.read_text()
+        # MIT license allows selling copies
+        assert "sell" in content.lower()
+
+    def test_license_requires_attribution(self):
+        """Test that LICENSE requires attribution (MIT characteristic)."""
+        license_path = PROJECT_ROOT / "LICENSE"
+        content = license_path.read_text()
+        # MIT requires including copyright notice
+        assert "copyright notice" in content.lower() or "permission notice" in content.lower()
+
+    def test_license_has_liability_disclaimer(self):
+        """Test that LICENSE has liability disclaimer."""
+        license_path = PROJECT_ROOT / "LICENSE"
+        content = license_path.read_text()
+        assert "LIABILITY" in content or "liable" in content.lower()
