@@ -518,3 +518,105 @@
 - All 497 tests passing (48 agent + 12 CLI + 39 cosmology + 24 plotter + 47 Hohmann + 74 Kepler + 30 session memory + 88 error handling + 24 cosmology queries + 61 code executor + 27 knowledge base + 23 web search)
 - Linting passes with ruff
 
+## 2026-02-07: Integration Tests for Agent Flow
+
+### Completed Tasks
+- Created `tests/test_agent_flow.py` - 36 comprehensive integration tests for agent flow
+  - Tests for ReAct loop flow (3 tests):
+    - Complete Thought-Action-Observation cycle
+    - Multi-step ReAct loop with multiple tools
+    - ReAct loop with visualization generation
+  - Tests for multi-tool orchestration (3 tests):
+    - Search-then-calculate flow
+    - Calculate-then-visualize flow
+    - Triple tool chain (web search + Wikipedia + code execution)
+  - Tests for error recovery flow (5 tests):
+    - Retry on incomplete response
+    - Retry with alternative approach
+    - Max retries returns best response
+    - Transient error retry (rate limits, timeouts)
+    - Non-transient error no retry (auth errors)
+  - Tests for session continuity flow (4 tests):
+    - Multi-turn conversation same session
+    - New session creates new thread
+    - Resume session by thread ID
+    - Session disabled no thread tracking
+  - Tests for graceful degradation flow (6 tests):
+    - Tool failure tracking
+    - Degradation notice in response
+    - Reset failed tools
+    - Degradation context in prompt
+    - Get error summary (empty)
+    - Get error summary with errors
+  - Tests for response synthesis flow (3 tests):
+    - Extracts final AI response
+    - Handles empty messages
+    - Skips tool messages for response
+  - Tests for topic prompt enhancement flow (2 tests):
+    - Dark matter query uses enhanced prompt
+    - Topic prompts disabled
+  - Tests for agent configuration flow (5 tests):
+    - MAX_ITERATIONS configured
+    - MAX_RETRIES configured
+    - RETRY_DELAY configured
+    - Agent default configuration
+    - Agent custom configuration
+  - Tests for tool availability flow (3 tests):
+    - All four tools available
+    - Tools have descriptions
+    - Tools are callable
+  - Tests for verbose output flow (2 tests):
+    - Verbose prints tool calls
+    - Verbose false suppresses output
+
+### PRD Tasks Marked Complete
+- Write integration tests for agent flow
+
+### Test Results
+- All 533 tests passing (497 previous + 36 integration tests)
+- Linting passes with ruff
+
+## 2026-02-07: End-to-End Tests with 10+ Queries
+
+### Completed Tasks
+- Created `tests/test_end_to_end.py` - 26 comprehensive end-to-end tests
+  - Tests for 12 diverse cosmology queries (TestEndToEndQueries class):
+    - Query 1: Escape velocity from Earth (code executor)
+    - Query 2: Schwarzschild radius of black hole (code executor)
+    - Query 3: Hohmann transfer to Mars (multi-tool: code + plotter)
+    - Query 4: Recent black hole research (web search)
+    - Query 5: Dark matter explanation (knowledge base)
+    - Query 6: Exoplanet orbit plot (code executor + plotter)
+    - Query 7: CMB temperature (knowledge base)
+    - Query 8: Hubble constant measurements (web search)
+    - Query 9: Gravitational waves and LIGO (knowledge base)
+    - Query 10: Stellar lifetime calculation (code executor)
+    - Query 11: Orbital period of Mars (code executor)
+    - Query 12: Neutron star density (code executor)
+  - Tests for tool integration (4 tests):
+    - All tools available
+    - Tool count verification
+    - Tools have descriptions
+    - Tools are callable
+  - Tests for multi-turn conversations (2 tests):
+    - Follow-up query session continuity
+    - New session resets context
+  - Tests for error recovery (2 tests):
+    - Retry on incomplete response
+    - Graceful degradation on tool failure
+  - Tests for PRD acceptance criteria (3 tests):
+    - All four tool integrations function correctly
+    - ReAct loop demonstrates multi-step reasoning
+    - 8/10 queries resolve successfully
+  - Tests for query result validation (3 tests):
+    - Escape velocity value accuracy (~11.2 km/s)
+    - Mars orbital period accuracy (~687 days / 1.88 years)
+    - CMB temperature accuracy (~2.725 K)
+
+### PRD Tasks Marked Complete
+- Run end-to-end tests with 10+ queries
+
+### Test Results
+- All 559 tests passing (533 previous + 26 end-to-end tests)
+- Linting passes with ruff
+

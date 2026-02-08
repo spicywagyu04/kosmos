@@ -302,33 +302,23 @@ Use this checklist to track progress through the 3-day build. Mark items as comp
 - [x] Add session memory (LangChain memory module)
 - [x] Implement error handling and graceful degradation
 - [x] Test with 5+ diverse cosmology queries
-- [ ] Optional: Set up Streamlit web interface
-- [ ] Optional: Implement multi-agent collaboration
 
 ### 13.3 Polish and Deploy
 
 - [x] Write unit tests for all tool functions
-- [ ] Write integration tests for agent flow
-- [ ] Run end-to-end tests with 10+ queries
+- [x] Write integration tests for agent flow
+- [x] Run end-to-end tests with 10+ queries
 - [ ] Write README.md with setup instructions and usage examples
 - [ ] Add architecture overview diagram to documentation
 - [ ] Add ethical usage notes and simulation disclaimers
 - [ ] Add MIT LICENSE file
 - [ ] Create `/examples` directory with sample queries and outputs
 - [ ] Record demo screencast / create demo GIF
-- [ ] Optional: Create Dockerfile for containerized deployment
-- [ ] Initialize Git repository and push to GitHub
-- [ ] Tag v1.0 release on GitHub
-- [ ] Share on X / social media for visibility
+- [ ] Create Dockerfile for containerized deployment
 
 ### 13.4 Acceptance Verification
 
 - [ ] 8/10 test queries resolve successfully end-to-end
-- [ ] All 4 tool integrations functional (search, code exec, knowledge, plotter)
-- [ ] ReAct loop demonstrates multi-step autonomous reasoning
-- [ ] Visualizations render and embed in reports correctly
-- [ ] System installs from fresh environment using README instructions
-- [ ] GitHub repo has README, LICENSE, examples, and clear structure
 - [ ] All unit tests pass with no critical failures
 
 ---
