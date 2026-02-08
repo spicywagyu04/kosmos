@@ -313,7 +313,7 @@ Use this checklist to track progress through the 3-day build. Mark items as comp
 - [x] Add ethical usage notes and simulation disclaimers
 - [x] Add MIT LICENSE file
 - [x] Create `/examples` directory with sample queries and outputs
-- [ ] Record demo screencast / create demo GIF
+- [x] Record demo screencast / create demo GIF
 - [x] Create Dockerfile for containerized deployment
 
 ### 13.4 Acceptance Verification
