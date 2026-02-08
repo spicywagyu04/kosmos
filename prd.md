@@ -318,8 +318,8 @@ Use this checklist to track progress through the 3-day build. Mark items as comp
 
 ### 13.4 Acceptance Verification
 
-- [ ] 8/10 test queries resolve successfully end-to-end
-- [ ] All unit tests pass with no critical failures
+- [x] 8/10 test queries resolve successfully end-to-end
+- [x] All unit tests pass with no critical failures
 
 ---
 
