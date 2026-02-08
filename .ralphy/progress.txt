@@ -668,3 +668,42 @@
 - All 559 tests passing
 - Linting passes with ruff
 
+## 2026-02-07: Ethical Usage Notes and Simulation Disclaimers
+
+### Completed Tasks
+- Created `docs/ethical_usage.md` - Comprehensive ethical usage documentation with:
+  - Purpose and Scope section defining educational vs mission-critical use
+  - Simulation Disclaimers section covering:
+    - Accuracy of calculations (simplified models, physical constants, orbital mechanics limitations)
+    - No warranty statement
+    - Verification recommendations (cross-reference with NASA GMAT, STK, SPICE)
+  - Ethical Usage Guidelines section covering:
+    - Responsible AI use (transparency, critical evaluation, academic integrity)
+    - Data privacy considerations (query content, API keys)
+    - Environmental considerations
+  - Data Sources and Citations section covering:
+    - Information sources (Tavily, Wikipedia, LLM knowledge)
+    - Citation requirements
+  - Limitations section covering:
+    - Technical limitations (sandbox, LLM constraints, tool availability)
+    - Domain limitations
+  - Best Practices for students, researchers, and educators
+  - Contact and feedback information
+- Updated `README.md` - Expanded Disclaimer section with:
+  - Simulation Accuracy warnings
+  - Responsible Use guidelines
+  - AI Limitations notes
+  - Link to comprehensive ethical_usage.md documentation
+- Created `tests/test_documentation.py` - 36 comprehensive tests covering:
+  - Ethical usage file existence and content (13 tests)
+  - README disclaimer section (8 tests)
+  - Documentation structure (3 tests)
+  - Detailed ethical usage content validation (12 tests)
+
+### PRD Tasks Marked Complete
+- Add ethical usage notes and simulation disclaimers
+
+### Test Results
+- All 595 tests passing (559 previous + 36 documentation tests)
+- Linting passes with ruff
+

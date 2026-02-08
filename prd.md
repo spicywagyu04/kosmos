@@ -310,7 +310,7 @@ Use this checklist to track progress through the 3-day build. Mark items as comp
 - [x] Run end-to-end tests with 10+ queries
 - [x] Write README.md with setup instructions and usage examples
 - [x] Add architecture overview diagram to documentation
-- [ ] Add ethical usage notes and simulation disclaimers
+- [x] Add ethical usage notes and simulation disclaimers
 - [ ] Add MIT LICENSE file
 - [ ] Create `/examples` directory with sample queries and outputs
 - [ ] Record demo screencast / create demo GIF

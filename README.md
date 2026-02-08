@@ -279,9 +279,30 @@ pytest
 ruff check src tests
 ```
 
-## Disclaimer
+## Disclaimer and Ethical Usage
 
-Kosmo is designed for educational and research purposes. While it uses physics equations and scientific data, the simulation outputs have not been peer-reviewed. Always verify critical calculations through established scientific resources.
+Kosmo is designed for **educational and research exploration purposes only**. Please read and understand these important points:
+
+### Simulation Accuracy
+
+- **Simplified Models**: Calculations use idealized physics models that may not account for gravitational perturbations, relativistic effects, atmospheric drag, or other real-world factors.
+- **Approximate Constants**: Physical constants are suitable for educational purposes but may not meet precision requirements for scientific publications or mission planning.
+- **No Warranty**: All outputs are provided "as-is" without warranty. Verify critical calculations through authoritative sources.
+
+### Responsible Use
+
+- **Verification Required**: Always cross-reference results with established tools (NASA GMAT, STK) and peer-reviewed literature.
+- **Not for Mission-Critical Use**: Do not use for spacecraft navigation, engineering decisions, or safety-critical applications.
+- **Academic Integrity**: Follow your institution's policies on AI-assisted work and cite AI usage appropriately.
+- **Data Privacy**: Avoid submitting personal or confidential information in queries.
+
+### AI Limitations
+
+- The underlying LLM may occasionally generate incorrect or hallucinated information
+- Web search results include non-peer-reviewed sources (arXiv preprints, news articles)
+- Always verify key facts against primary scientific sources
+
+For comprehensive guidelines, see [docs/ethical_usage.md](docs/ethical_usage.md).
 
 ## License
 
