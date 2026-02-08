@@ -204,7 +204,7 @@ kepler_442b = get_exoplanet_example("Kepler-442b")
 
 ## Architecture
 
-Kosmo follows a modular agent architecture:
+Kosmo follows a modular three-layer agent architecture. For a detailed architecture overview, see [docs/architecture.md](docs/architecture.md).
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

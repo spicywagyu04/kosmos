@@ -646,3 +646,25 @@
 - All 559 tests passing
 - Linting passes with ruff
 
+## 2026-02-07: Architecture Overview Diagram
+
+### Completed Tasks
+- Created `docs/architecture.md` - Comprehensive architecture documentation with:
+  - High-level ASCII architecture diagram showing three-layer design
+  - Detailed component breakdown for each layer
+  - ReAct loop execution flow diagram with multi-iteration example
+  - Data flow diagram for query processing
+  - Error handling and graceful degradation flow
+  - Session memory architecture diagram
+  - Module dependencies overview
+  - Technology stack summary table
+  - Extension points documentation
+- Updated `README.md` - Added reference to the new architecture documentation
+
+### PRD Tasks Marked Complete
+- Add architecture overview diagram to documentation
+
+### Test Results
+- All 559 tests passing
+- Linting passes with ruff
+
