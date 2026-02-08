@@ -308,7 +308,7 @@ Use this checklist to track progress through the 3-day build. Mark items as comp
 - [x] Write unit tests for all tool functions
 - [x] Write integration tests for agent flow
 - [x] Run end-to-end tests with 10+ queries
-- [ ] Write README.md with setup instructions and usage examples
+- [x] Write README.md with setup instructions and usage examples
 - [ ] Add architecture overview diagram to documentation
 - [ ] Add ethical usage notes and simulation disclaimers
 - [ ] Add MIT LICENSE file

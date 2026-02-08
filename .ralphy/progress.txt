@@ -620,3 +620,29 @@
 - All 559 tests passing (533 previous + 26 end-to-end tests)
 - Linting passes with ruff
 
+## 2026-02-07: README.md Documentation
+
+### Completed Tasks
+- Created `README.md` - Comprehensive documentation with:
+  - Project overview and feature list
+  - Installation instructions (prerequisites, virtual environment, pip install)
+  - API key configuration via .env file
+  - CLI usage (interactive mode, single query mode, command line options)
+  - Example queries for calculations, orbital mechanics, and research
+  - Python API usage examples with KosmoAgent
+  - Agent configuration options
+  - Examples module usage (Hohmann transfer, Kepler orbits)
+  - ASCII architecture diagram showing three-layer design
+  - ReAct loop explanation
+  - Project structure overview
+  - Development instructions (tests, linting)
+  - Disclaimer for educational/research purposes
+  - License and contributing information
+
+### PRD Tasks Marked Complete
+- Write README.md with setup instructions and usage examples
+
+### Test Results
+- All 559 tests passing
+- Linting passes with ruff
+
