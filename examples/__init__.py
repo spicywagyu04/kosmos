@@ -31,8 +31,35 @@ from .kepler_orbit import (
     generate_orbit_plot_code,
     get_exoplanet_example,
 )
+from .sample_queries import (
+    CALCULATION_QUERIES,
+    COSMOLOGY_QUERIES,
+    ORBITAL_QUERIES,
+    RESEARCH_QUERIES,
+    SAMPLE_QUERIES,
+    SampleQuery,
+    get_queries_by_category,
+    get_query_by_name,
+    list_all_queries,
+    print_query_catalog,
+    run_all_queries,
+    run_query,
+)
 
 __all__ = [
+    # Sample queries
+    "SampleQuery",
+    "SAMPLE_QUERIES",
+    "CALCULATION_QUERIES",
+    "ORBITAL_QUERIES",
+    "RESEARCH_QUERIES",
+    "COSMOLOGY_QUERIES",
+    "get_query_by_name",
+    "get_queries_by_category",
+    "list_all_queries",
+    "run_query",
+    "run_all_queries",
+    "print_query_catalog",
     # Constants
     "G",
     "M_SUN",

@@ -735,3 +735,48 @@
 - All 605 tests passing (595 previous + 10 LICENSE tests)
 - Linting passes with ruff
 
+## 2026-02-07: Sample Queries and Outputs Examples
+
+### Completed Tasks
+- Created `examples/sample_queries.py` - Comprehensive sample query module with:
+  - `SampleQuery` dataclass with name, query, category, description, expected_tools fields
+  - `SAMPLE_QUERIES` list with 12 diverse cosmology queries across 4 categories:
+    - Calculation (3): escape velocity, Schwarzschild radius, orbital period
+    - Orbital Mechanics (3): Hohmann transfer, exoplanet orbit, satellite velocity
+    - Research (3): black hole research, dark matter, gravitational waves
+    - Cosmology (3): CMB temperature, Hubble constant, universe age
+  - Pre-filtered category lists: CALCULATION_QUERIES, ORBITAL_QUERIES, RESEARCH_QUERIES, COSMOLOGY_QUERIES
+  - Helper functions:
+    - `get_query_by_name()` - Retrieve query by name identifier
+    - `get_queries_by_category()` - Filter queries by category
+    - `list_all_queries()` - List all query names
+    - `run_query()` - Execute query using KosmoAgent
+    - `run_all_queries()` - Run all sample queries
+    - `print_query_catalog()` - Display formatted catalog
+- Created `examples/SAMPLE_OUTPUTS.md` - Comprehensive sample outputs documentation with:
+  - Example outputs for queries in all 4 categories
+  - Detailed agent responses with calculations and explanations
+  - Tools used notation for each query
+  - Running instructions at the end
+- Updated `examples/__init__.py` - Exported all sample query functions and classes
+- Created `tests/test_sample_queries.py` - 48 comprehensive tests:
+  - Tests for SampleQuery dataclass (2 tests)
+  - Tests for SAMPLE_QUERIES list (5 tests)
+  - Tests for category lists (10 tests)
+  - Tests for get_query_by_name function (4 tests)
+  - Tests for get_queries_by_category function (5 tests)
+  - Tests for list_all_queries function (3 tests)
+  - Tests for run_query function (2 tests)
+  - Tests for run_all_queries function (2 tests)
+  - Tests for print_query_catalog function (2 tests)
+  - Tests for examples module exports (4 tests)
+  - Tests for specific query content (5 tests)
+  - Tests for SAMPLE_OUTPUTS.md file (5 tests)
+
+### PRD Tasks Marked Complete
+- Create `/examples` directory with sample queries and outputs
+
+### Test Results
+- All 653 tests passing (605 previous + 48 sample queries tests)
+- Linting passes with ruff
+

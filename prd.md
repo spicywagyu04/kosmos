@@ -312,7 +312,7 @@ Use this checklist to track progress through the 3-day build. Mark items as comp
 - [x] Add architecture overview diagram to documentation
 - [x] Add ethical usage notes and simulation disclaimers
 - [x] Add MIT LICENSE file
-- [ ] Create `/examples` directory with sample queries and outputs
+- [x] Create `/examples` directory with sample queries and outputs
 - [ ] Record demo screencast / create demo GIF
 - [ ] Create Dockerfile for containerized deployment
 
