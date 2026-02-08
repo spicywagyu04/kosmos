@@ -224,7 +224,7 @@ class KosmoAgent:
             self._agents[system_prompt] = create_react_agent(
                 llm,
                 tools,
-                state_modifier=system_prompt,
+                prompt=system_prompt,
                 checkpointer=checkpointer
             )
 

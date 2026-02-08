@@ -46,3 +46,10 @@ outputs/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Linter
+.ruff_cache/
+
+# Ralphy (automation tooling)
+ralphy.sh
+.ralphy/

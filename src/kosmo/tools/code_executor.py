@@ -1,5 +1,6 @@
 """Sandboxed Python code execution tool."""
 
+import ast
 import io
 import traceback
 from contextlib import redirect_stderr, redirect_stdout
@@ -9,6 +10,55 @@ ALLOWED_MODULES = {
     "math", "numpy", "sympy", "scipy",
     "datetime", "collections", "itertools", "functools"
 }
+
+
+def _safe_import(name, *args, **kwargs):
+    """Restricted import that only allows pre-approved modules."""
+    # Handle submodule imports (e.g., "scipy.constants")
+    top_level = name.split(".")[0]
+    if top_level not in ALLOWED_MODULES:
+        raise ImportError(
+            f"Module '{name}' is not allowed. "
+            f"Available modules: {', '.join(sorted(ALLOWED_MODULES))}"
+        )
+    return __builtins__["__import__"](name, *args, **kwargs) if isinstance(__builtins__, dict) \
+        else getattr(__builtins__, "__import__")(name, *args, **kwargs)
+
+
+def _auto_print_last_expr(code: str) -> str:
+    """If the last statement is an expression, wrap it in print() so the value is captured.
+
+    This makes the sandbox behave like a REPL — the LLM can write `v_e` as the
+    last line and get the value back instead of 'no output'.
+    """
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return code  # Let the executor handle the syntax error
+
+    if tree.body and isinstance(tree.body[-1], ast.Expr):
+        # Replace last expression with print(repr(expr))
+        last_expr = tree.body[-1]
+        print_call = ast.Expr(
+            value=ast.Call(
+                func=ast.Name(id="print", ctx=ast.Load()),
+                args=[
+                    ast.Call(
+                        func=ast.Name(id="repr", ctx=ast.Load()),
+                        args=[last_expr.value],
+                        keywords=[]
+                    )
+                ],
+                keywords=[]
+            )
+        )
+        ast.copy_location(print_call, last_expr)
+        ast.copy_location(print_call.value, last_expr.value)
+        tree.body[-1] = print_call
+        ast.fix_missing_locations(tree)
+        return ast.unparse(tree)
+
+    return code
 
 
 def execute_code(code: str, timeout_seconds: int = 30) -> str:
@@ -39,7 +89,10 @@ def execute_code(code: str, timeout_seconds: int = 30) -> str:
     for name in safe_builtins:
         namespace["__builtins__"][name] = getattr(builtins, name)
 
-    # Import allowed modules
+    # Add restricted __import__ so `import numpy` works for allowed modules
+    namespace["__builtins__"]["__import__"] = _safe_import
+
+    # Pre-import allowed modules into namespace
     try:
         import math
 
@@ -65,6 +118,9 @@ def execute_code(code: str, timeout_seconds: int = 30) -> str:
 
     except ImportError as e:
         return f"Error: Required module not available: {e}"
+
+    # Auto-print last expression so REPL-style code returns values
+    code = _auto_print_last_expr(code)
 
     # Capture output
     stdout_capture = io.StringIO()
