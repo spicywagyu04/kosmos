@@ -780,3 +780,48 @@
 - All 653 tests passing (605 previous + 48 sample queries tests)
 - Linting passes with ruff
 
+## 2026-02-07: Dockerfile for Containerized Deployment
+
+### Completed Tasks
+- Created `Dockerfile` - Production-ready containerization configuration with:
+  - Python 3.11 slim base image for smaller footprint
+  - Environment variables for Python optimization (PYTHONDONTWRITEBYTECODE, PYTHONUNBUFFERED)
+  - System dependencies for matplotlib and scientific computing (gcc, libc-dev, libffi-dev)
+  - Layer caching optimization (copy requirements before source code)
+  - pip install with --no-cache-dir for smaller image size
+  - Non-root user (kosmo) for security
+  - Output directory configuration for plots
+  - ENTRYPOINT/CMD for kosmo CLI execution
+  - OCI labels for container metadata (title, description, version, license, source)
+  - apt cache cleanup with rm -rf /var/lib/apt/lists/*
+- Created `.dockerignore` - Build context optimization with:
+  - Git files exclusion (.git, .gitignore)
+  - Python bytecode and cache exclusion (__pycache__, *.pyc, .eggs)
+  - Virtual environment exclusion (.venv, venv/)
+  - Testing cache exclusion (.pytest_cache, .coverage)
+  - IDE files exclusion (.idea, .vscode)
+  - Build artifacts exclusion (build/, dist/)
+  - Linting cache exclusion (.ruff_cache, .mypy_cache)
+  - Environment files exclusion (.env)
+  - Development files exclusion (.ralphy/, ralphy.sh)
+  - OS files exclusion (.DS_Store, Thumbs.db)
+  - Output files exclusion (output/, images)
+- Created `tests/test_dockerfile.py` - 33 comprehensive tests:
+  - Tests for Dockerfile existence (2 tests)
+  - Tests for base image configuration (3 tests)
+  - Tests for environment configuration (3 tests)
+  - Tests for dependency installation (4 tests)
+  - Tests for security configuration (3 tests)
+  - Tests for entrypoint configuration (2 tests)
+  - Tests for metadata labels (3 tests)
+  - Tests for .dockerignore file (8 tests)
+  - Tests for build context optimization (2 tests)
+  - Tests for Dockerfile optimizations (3 tests)
+
+### PRD Tasks Marked Complete
+- Create Dockerfile for containerized deployment
+
+### Test Results
+- All 686 tests passing (653 previous + 33 Dockerfile tests)
+- Linting passes with ruff
+
